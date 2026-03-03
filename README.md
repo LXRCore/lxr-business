@@ -1,10 +1,56 @@
-# LXR-Management 🏢
+# 🐺 LXR-Management
 
-**LXR-Management** combines both **lxr-bossmenu** and **lxr-gangmenu** into one powerful management resource using **lxr-menu** and **lxr-input**, now with SQL support for managing society funds!
+> **wolves.land — The Land of Wolves** | Developed by [iBoss21](https://github.com/iboss21) / The Lux Empire
+
+**LXR-Management** combines both **lxr-bossmenu** and **lxr-gangmenu** into one powerful management resource using **lxr-menu** and **lxr-input**, with full SQL support for managing society and gang funds.
 
 ---
 
-## Dependencies 🔧
+```
+██╗     ██╗  ██╗██████╗       ███╗   ███╗ █████╗ ███╗   ██╗ █████╗  ██████╗ ███████╗███╗   ███╗███████╗███╗   ██╗████████╗
+██║     ╚██╗██╔╝██╔══██╗      ████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝ ██╔════╝████╗ ████║██╔════╝████╗  ██║╚══██╔══╝
+██║      ╚███╔╝ ██████╔╝█████╗██╔████╔██║███████║██╔██╗ ██║███████║██║  ███╗█████╗  ██╔████╔██║█████╗  ██╔██╗ ██║   ██║   
+██║      ██╔██╗ ██╔══██╗╚════╝██║╚██╔╝██║██╔══██║██║╚██╗██║██╔══██║██║   ██║██╔══╝  ██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   
+███████╗██╔╝ ██╗██║  ██║      ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║  ██║╚██████╔╝███████╗██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   
+╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   
+```
+
+---
+
+## ═══════════════════════════════════════════════════════
+## 🌐 Server Information
+## ═══════════════════════════════════════════════════════
+
+| Field       | Value                                             |
+|-------------|---------------------------------------------------|
+| **Server**  | The Land of Wolves 🐺                             |
+| **Type**    | Serious Hardcore Roleplay — Georgian RP 🇬🇪        |
+| **Website** | https://www.wolves.land                           |
+| **Discord** | https://discord.gg/CrKcWdfd3A                    |
+| **Store**   | https://theluxempire.tebex.io                    |
+| **Author**  | iBoss21 / The Lux Empire                         |
+
+---
+
+## ═══════════════════════════════════════════════════════
+## 📦 Framework Support
+## ═══════════════════════════════════════════════════════
+
+| Framework       | Status       |
+|-----------------|--------------|
+| LXR-Core        | ✅ Primary   |
+| RSG-Core        | ✅ Primary   |
+| VORP Core       | ✅ Supported |
+| RedEM:RP        | 🔄 Optional  |
+| QBR-Core        | 🔄 Optional  |
+| QR-Core         | 🔄 Optional  |
+| Standalone      | 🔄 Fallback  |
+
+---
+
+## ═══════════════════════════════════════════════════════
+## 🔧 Dependencies
+## ═══════════════════════════════════════════════════════
 
 - [lxr-core](https://github.com/LXRCore/lxr-core)
 - [lxr-smallresources](https://github.com/LXRCore/lxr-smallresources) (For the logs)
@@ -12,54 +58,57 @@
 - [lxr-menu](https://github.com/LXRCore/lxr-menu)
 - [lxr-inventory](https://github.com/LXRCore/lxr-inventory)
 - [lxr-clothing](https://github.com/LXRCore/lxr-clothing)
+- [oxmysql](https://github.com/overextended/oxmysql)
 
 ---
 
-## Screenshots 📸
+## ═══════════════════════════════════════════════════════
+## 📸 Screenshots
+## ═══════════════════════════════════════════════════════
 
-![image](https://i.imgur.com/9yiQZDX.png)
-![image](https://i.imgur.com/MRMWeqX.png)
+![Boss Menu](https://i.imgur.com/9yiQZDX.png)
+![Gang Menu](https://i.imgur.com/MRMWeqX.png)
 
 ---
 
-## Installation 🛠️
+## ═══════════════════════════════════════════════════════
+## 🛠️ Installation
+## ═══════════════════════════════════════════════════════
 
 ### Manual Installation
 
-1. **Download the script** and place it in the `[lxr]` directory of your server.
-2. **Import the SQL file** `lxr-management.sql` into your database.
-3. **Edit** the `config.lua` file to set the coordinates for your boss/gang menu locations.
-4. **Restart** the script or your server to apply changes.
+1. **Download** the resource and place the `lxr-management` folder into your `[lxr]` directory.
+2. **Import** `lxr-management.sql` into your database.
+3. **Configure** `config.lua` — set the coordinates for boss/gang menu locations.
+4. **Ensure** the resource is named exactly `lxr-management` (resource name protection is active).
+5. **Restart** the script or your server to apply changes.
 
 ---
 
-## Database Setup ⚙️
+## ═══════════════════════════════════════════════════════
+## ⚙️ Database Setup
+## ═══════════════════════════════════════════════════════
 
-> **IMPORTANT**:  
-> You must manually create a column in your database for the society in the `bossmenu` table or gang in the `gangmenu` table if you are using custom jobs or gangs.
-> 
-> **NOTE**: The boss and gang information now share the same table for simplicity.
+> **IMPORTANT**:
+> You must manually add a row in the `management_menu` table for any custom jobs or gangs.
+> Boss and gang accounts share the same table — differentiated by the `menu_type` column.
 
-Here’s an example of what your database setup should look like:
-
-![database](https://i.imgur.com/JZnEK4M.png)
-
----
-
-## License 📄
-
-    LXRCore Framework
-    Copyright (C) 2024
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the MIT License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    You should have received a copy of the MIT License along with this program.
+![Database](https://i.imgur.com/JZnEK4M.png)
 
 ---
 
-With **LXR-Management**, you can seamlessly manage both society and gang funds, simplify menu operations, and enjoy full SQL integration. Get ready to lead like never before!
+## ═══════════════════════════════════════════════════════
+## 📄 License
+## ═══════════════════════════════════════════════════════
+
+```
+© 2026 iBoss21 / The Lux Empire | wolves.land | All Rights Reserved
+
+LXRCore Framework — lxr-management
+This program is free software: you can redistribute it and/or modify
+it under the terms of the MIT License.
+```
+
+---
+
+*With **LXR-Management**, you can seamlessly manage both society and gang funds, simplify menu operations, and enjoy full SQL integration. Get ready to lead like never before! 🐺*
