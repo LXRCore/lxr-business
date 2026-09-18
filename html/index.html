@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- LXR-BUSINESS | LXR UI Kit | © 2026 iBoss21 / LXRCore | lxrcore.com -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The ledger</title>
+  <link rel="stylesheet" href="lxr-ui.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="lxr">
+  <div id="app" class="lxr-hidden">
+    <header class="bz-top lxr-hit">
+      <div class="bz-brand">
+        <img class="bz-logo" src="img/lxrcore-logo.png" alt="">
+        <div><span class="lxr-mono lxr-t-ash" data-l="kicker"></span><h1 class="lxr-cut bz-title" id="job-label"></h1></div>
+      </div>
+      <div class="bz-hints lxr-mono lxr-t-smoke"><span class="lxr-key">Backspace</span><span data-l="hint_close"></span></div>
+    </header>
+
+    <section class="bz-main lxr-hit">
+      <div class="bz-head lxr-rule-b"><span class="lxr-mono lxr-t-ash" data-l="staff"></span><span class="lxr-grow"></span><span class="lxr-mono lxr-t-smoke" id="staff-count"></span></div>
+      <div class="bz-rows" id="staff"></div>
+    </section>
+
+    <aside class="bz-side lxr-hit">
+      <div class="bz-head lxr-rule-b"><span class="lxr-mono lxr-t-ash" data-l="book"></span></div>
+      <div class="bz-book"><div class="bz-balance lxr-cut" id="balance"></div><div class="lxr-mono lxr-t-smoke" id="wagebill"></div><div class="bz-form" id="book-form"></div></div>
+      <div class="bz-head lxr-rule-b"><span class="lxr-mono lxr-t-ash" data-l="hire"></span></div>
+      <div class="bz-hire" id="hire"></div>
+      <div class="bz-head lxr-rule-b"><span class="lxr-mono lxr-t-ash" data-l="grades"></span></div>
+      <div class="bz-grades" id="grades"></div>
+    </aside>
+
+    <footer class="bz-foot lxr-hit"><span class="lxr-grow"></span><button class="lxr-btn lxr-btn-ghost" id="btn-close" data-l="close"></button></footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

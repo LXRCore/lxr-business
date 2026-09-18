@@ -1,75 +1,52 @@
 --[[
-    ██╗     ██╗  ██╗██████╗       ███╗   ███╗ █████╗ ███╗   ██╗ █████╗  ██████╗ ███████╗███╗   ███╗███████╗███╗   ██╗████████╗
-    ██║     ╚██╗██╔╝██╔══██╗      ████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝ ██╔════╝████╗ ████║██╔════╝████╗  ██║╚══██╔══╝
-    ██║      ╚███╔╝ ██████╔╝█████╗██╔████╔██║███████║██╔██╗ ██║███████║██║  ███╗█████╗  ██╔████╔██║█████╗  ██╔██╗ ██║   ██║   
-    ██║      ██╔██╗ ██╔══██╗╚════╝██║╚██╔╝██║██╔══██║██║╚██╗██║██╔══██║██║   ██║██╔══╝  ██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   
-    ███████╗██╔╝ ██╗██║  ██║      ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║  ██║╚██████╔╝███████╗██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   
-    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   
+    LXR Core - Business
 
-    🐺 LXR Management System - FX Resource Manifest
+    Brand:       LXRCore — Lux Empire eXperience RedM Core
+    Product:     wolves.land / The Land of Wolves
+    Developer:   iBoss21 / LXRCore
+    Website:     https://www.lxrcore.com
+    Discord:     https://discord.gg/ZHMKVYyhBa (development)
+    GitHub:      https://github.com/LXRCore
 
-    ═══════════════════════════════════════════════════════════════════════════════
-    RESOURCE INFORMATION
-    ═══════════════════════════════════════════════════════════════════════════════
+    Version: 1.0.0
+    Performance Target: 0.00 ms idle
 
-    Resource Name:  lxr-management
-    Version:        2.0.0
-    Author:         iBoss21 / The Lux Empire
-    Description:    Combined Boss & Gang management system for RedM.
-                    Society funds, employee management, and gang control.
+    Framework Support:
+    - LXR Core v3 (Native — GetCoreObject / GetLXR)
 
-    Server:         The Land of Wolves 🐺
-    Website:        https://www.wolves.land
-    Discord:        https://discord.gg/CrKcWdfd3A
-    Store:          https://theluxempire.tebex.io
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    FRAMEWORK SUPPORT
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    Primary:
-    - LXR Core (lxr-core)
-    - RSG Core (rsg-core)
-
-    Supported:
-    - VORP Core (vorp_core)
-
-    Optional (if detected):
-    - RedEM:RP (redem_roleplay)
-    - QBR Core (qbr-core)
-    - QR Core (qr-core)
-    - Standalone (no framework)
-
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    © 2026 iBoss21 / The Lux Empire | wolves.land | All Rights Reserved
+    © 2026 iBoss21 / LXRCore | lxrcore.com | All Rights Reserved
 ]]
 
 fx_version 'cerulean'
 game 'rdr3'
-
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
-
--- Resource Metadata
-name        'LXR Management System'
-author      'iBoss21 / The Lux Empire'
-description 'Combined Boss & Gang management system with society funds and SQL support'
-version     '2.0.0'
-
--- Lua 5.4
 lua54 'yes'
 
-client_scripts {
+name 'lxr-business'
+author 'iBoss21 / LXRCore'
+description 'LXRCore v3 business: the proprietor ledger for every registry job — staff on and off line, hire, promote, let go, the society book and the wages it owes'
+version '3.0.0'
+repository 'https://github.com/LXRCore/lxr-business'
+
+shared_scripts {
+    'shared/locale.lua',
+    'locales/*.lua',
     'config.lua',
-    'client/*.lua'
+    'shared/rules.lua',
 }
 
-server_scripts {
-    '@oxmysql/lib/MySQL.lua',
-    'server/*.lua'
+client_script 'client/main.lua'
+server_script 'server/main.lua'
+
+ui_page 'html/index.html'
+
+files {
+    'html/index.html',
+    'html/lxr-ui.css',
+    'html/style.css',
+    'html/fonts/*.woff2',
+    'html/app.js',
+    'html/img/*.png',
 }
 
-server_exports {
-    'GetAccount',
-    'GetaccountGang',
-}
+dependencies { 'lxr-core', 'lxr-nui', 'lxr-inventory', 'lxr-interact' }
