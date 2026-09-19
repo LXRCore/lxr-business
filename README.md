@@ -24,6 +24,8 @@ registry, the book from lxr-bank, the staff changes from the core.
 * **The book** — balance from lxr-bank's `society_<job>`, the wage bill
   from the grade wages × headcount, deposit and withdraw with the `society`
   permission (`Config.Ledger.maxMove`).
+* **Jobs held** — a character keeps every job they were hired into and switches with `/myjobs` (cap per character); firing removes it. `Config.Jobs`.
+* **Billing** — a bill to a person standing by from the trades allowed to bill; paid into the society book, or a receipt item to settle later. `Config.Billing`.
 * **Desks** — `Config.Desks[job]` positions as lxr-interact points; or
   `/ledger` anywhere when `Config.Ledger.anywhere` is on.
 * **Events** — `lxr:business:hired / graded / fired (job, citizenid, level, by)`.

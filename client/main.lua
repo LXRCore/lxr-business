@@ -64,6 +64,49 @@ CreateThread(function()
 end)
 
 if Config.Ledger.anywhere then RegisterCommand(Config.Ledger.command, function() if B.Manages(me().job) then open() end end, false) end
+
+-- ── jobs held: /myjobs — switch, or leave one
+RegisterNetEvent('lxr-business:client:jobs', function()
+    local ok, list, cap = LXR.RPC.Server('lxr-business:jobs')
+    if not ok then return toast('error.' .. tostring(list), 'error') end
+    local rows = {}
+    for _, j in ipairs(list) do rows[#rows + 1] = { id = j.job, name = j.label, sub = j.gradeLabel, badge = j.active and Lang:t('ui.active') or nil } end
+    if #rows == 0 then return toast('info.no_jobs', 'inform') end
+    exports['lxr-nui']:Menu({ title = Lang:t('ui.my_jobs'), subtitle = Lang:t('ui.jobs_cap', { n = #list, cap = cap }), rows = rows }, function(id)
+        if not id then return end
+        local actions = { { id = 'switch', name = Lang:t('ui.switch_to') } }
+        if Config.Jobs.dropAllowed then actions[#actions + 1] = { id = 'drop', name = Lang:t('ui.leave_job') } end
+        exports['lxr-nui']:Menu({ title = Lang:t('ui.my_jobs'), rows = actions }, function(a)
+            if not a then return end
+            local ok2, err = LXR.RPC.Server('lxr-business:' .. a, id)
+            if ok2 then toast(a == 'switch' and 'info.switched' or 'info.left', 'success') else toast('error.' .. tostring(err), 'error') end
+        end)
+    end)
+end)
+
+-- ── billing: an option on people for the jobs that may bill
+CreateThread(function()
+    while GetResourceState('lxr-interact') ~= 'started' do Wait(1000) end
+    if not Config.Billing.enabled then return end
+    local function sid(e) return GetPlayerServerId(NetworkGetPlayerIndexFromPed(e)) end
+    local function may()
+        local job = me().job or {}
+        if job.name == 'unemployed' or not job.name then return false end
+        if #(Config.Billing.jobs or {}) == 0 then return true end
+        for _, t in ipairs(Config.Billing.jobs) do if job.type == t then return true end end
+        return false
+    end
+    exports['lxr-interact']:AddGlobal('lxr-business:bill', 'player', { label = Lang:t('ui.person'), distance = Config.Billing.distance, options = {
+        { label = Lang:t('ui.bill'), key = 'B', canInteract = function(e) return e ~= nil and may() end, onSelect = function(d)
+            local id = sid(d.entity)
+            exports['lxr-nui']:Input({ title = Lang:t('ui.bill'), fields = { { id = 'amount', label = Lang:t('ui.bill_amount'), type = 'number', value = 1 }, { id = 'reason', label = Lang:t('ui.bill_reason'), type = 'text' } } }, function(v)
+                if not v then return end
+                local ok, paid = LXR.RPC.Server('lxr-business:bill', id, tonumber(v.amount) or 0, v.reason)
+                if ok then toast(paid and 'info.bill_paid' or 'info.bill_receipt', 'success') else toast('error.' .. tostring(paid), 'error') end
+            end)
+        end },
+    }})
+end)
 RegisterNetEvent('lxr:client:unloaded', close)
 AddEventHandler('onResourceStop', function(res) if res == GetCurrentResourceName() then close() end end)
 exports('Open', open)

@@ -71,6 +71,26 @@ Config.Ledger = {
 -- ████████████████████████████████████████████████████████████████████████████████
 -- ████████████████████████ SECURITY ══════════════════════════════════════════════
 -- ████████████████████████████████████████████████████████████████████████████████
+-- jobs held: a character keeps every job they were hired into and switches between them (`/myjobs`);
+-- the active job is the core's one. Firing removes the job from the list.
+Config.Jobs = {
+    held = true,
+    max = 2,                         -- jobs a character may hold at once
+    maxByCitizen = {},               -- { ['LXR1001'] = 4 } for staff or testers
+    dropAllowed = true,              -- a character may leave a job themselves
+    command = 'myjobs',
+}
+
+-- billing: a bill from a job (its society book takes the money) to a person standing by, or a receipt item
+Config.Billing = {
+    enabled = true,
+    max = 500,
+    jobs = { 'medical', 'leo', 'business' },   -- job types (core registry) that may bill; {} = every job with a society
+    toSociety = true,                -- paid bills go to the biller's society book (lxr-bank); false = to the biller
+    receiptItem = 'receipt',         -- catalog item written when the person cannot pay now (nil: refuse)
+    distance = 3.0,
+}
+
 Config.Security = { rateLimit = { windowMs = 2000, burst = 8 }, maxDistance = 4.0, promptDistance = 2.0 }
 
 -- ████████████████████████████████████████████████████████████████████████████████

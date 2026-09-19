@@ -26,6 +26,7 @@ local function player(src) return LXRCore.Functions.GetPlayer(src) end
 local function nameOf(P) local ci = P.PlayerData.charinfo return ci.firstname .. ' ' .. ci.lastname end
 local function log(msg, data) if Config.Debug.log then LXRCore.Log.info('business', msg, data) end end
 local function bankOn() return GetResourceState('lxr-bank') == 'started' end
+local dropJob   -- the jobs-held book, defined below; fire uses it
 local function book(name) return bankOn() and exports['lxr-bank']:GetBook('society_' .. name) or 0 end
 
 local function atDesk(src, jobName)
@@ -141,11 +142,130 @@ LXR.RPC.Register('lxr-business:fire', function(src, jobName, citizenid)
     if T.PlayerData.citizenid == P.PlayerData.citizenid then return false, 'yourself' end
     local ok, err = B.MayFire(P.PlayerData.job, T.PlayerData.job.grade.level)
     if not ok then return false, err end
+    dropJob(T.PlayerData.citizenid, jobName)
     T.Functions.SetJob('unemployed', 0)
     if offline then T.Functions.Save() else LXRCore.Notify(T.PlayerData.source, Lang:t('info.you_fired', { job = B.Def(jobName).label }), 'inform') end
     LXRCore.Emit('lxr:business:fired', nil, jobName, T.PlayerData.citizenid, src)
     log('fired', { job = jobName, source = src, target = T.PlayerData.citizenid })
     return true, ledger(src)
+end)
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- 💼 JOBS HELD — hired into several, one active at a time
+-- ═══════════════════════════════════════════════════════════════════════════════
+LXRCore.DB.RegisterMigration(RES, '0001_jobs_held', [[
+CREATE TABLE IF NOT EXISTS `lxr_jobs_held` (
+  `citizenid` VARCHAR(50) NOT NULL,
+  `job` VARCHAR(64) NOT NULL,
+  `grade` INT NOT NULL DEFAULT 0,
+  `since` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`citizenid`, `job`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+]])
+local function heldOf(cid) return LXRCore.DB.Query('SELECT job, grade, since FROM lxr_jobs_held WHERE citizenid = ? ORDER BY since', { cid }) or {} end
+local function holdJob(cid, job, grade)
+    if not Config.Jobs.held or job == 'unemployed' then return end
+    LXRCore.DB.UpdateAsync('INSERT INTO lxr_jobs_held (citizenid, job, grade) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE grade = VALUES(grade)', { cid, job, grade or 0 })
+end
+dropJob = function(cid, job) LXRCore.DB.UpdateAsync('DELETE FROM lxr_jobs_held WHERE citizenid = ? AND job = ?', { cid, job }) end
+local function jobCap(cid) return tonumber(Config.Jobs.maxByCitizen[cid]) or Config.Jobs.max or 2 end
+-- every job change the core makes is remembered (hires from anywhere: desks, admin, other resources)
+AddEventHandler('lxr:job:changed', function(src, job)
+    if not Config.Jobs.held or type(job) ~= 'table' then return end
+    local P = player(src)
+    if not P or job.name == 'unemployed' then return end
+    holdJob(P.PlayerData.citizenid, job.name, job.grade and job.grade.level or 0)
+end)
+LXR.RPC.Register('lxr-business:jobs', function(src)
+    if limited(src) then return false, 'rate' end
+    local P = player(src)
+    if not P then return false, 'invalid' end
+    local out = {}
+    for _, r in ipairs(heldOf(P.PlayerData.citizenid)) do
+        local def = B.Def(r.job)
+        if def then
+            local g = def.grades and def.grades[tostring(r.grade)] or nil
+            out[#out + 1] = { job = r.job, label = def.label, grade = r.grade, gradeLabel = g and g.name or tostring(r.grade), active = P.PlayerData.job.name == r.job }
+        end
+    end
+    return true, out, jobCap(P.PlayerData.citizenid)
+end)
+LXR.RPC.Register('lxr-business:switch', function(src, job)
+    if limited(src) then return false, 'rate' end
+    local P = player(src)
+    if not P or not Config.Jobs.held then return false, 'invalid' end
+    if P.PlayerData.job.onduty then return false, 'on_duty' end
+    local found
+    for _, r in ipairs(heldOf(P.PlayerData.citizenid)) do if r.job == job then found = r end end
+    if not found then return false, 'not_held' end
+    if not P.Functions.SetJob(found.job, tonumber(found.grade) or 0) then return false, 'invalid' end
+    log('switched job', { source = src, job = job })
+    return true
+end)
+LXR.RPC.Register('lxr-business:drop', function(src, job)
+    if limited(src) then return false, 'rate' end
+    local P = player(src)
+    if not P or not Config.Jobs.dropAllowed then return false, 'invalid' end
+    dropJob(P.PlayerData.citizenid, job)
+    if P.PlayerData.job.name == job then P.Functions.SetJob('unemployed', 0) end
+    log('dropped job', { source = src, job = job })
+    return true
+end)
+LXRCore.Commands.Add(Config.Jobs.command or 'myjobs', Lang:t('command.myjobs'), {}, false, function(src) TriggerClientEvent('lxr-business:client:jobs', src) end, 'user')
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- 🧾 BILLING — a bill from a job to a person standing by
+-- ═══════════════════════════════════════════════════════════════════════════════
+local function mayBill(P)
+    if not Config.Billing.enabled then return false end
+    local job = P.PlayerData.job or {}
+    if job.name == 'unemployed' then return false end
+    if #(Config.Billing.jobs or {}) == 0 then return true end
+    for _, t in ipairs(Config.Billing.jobs) do if job.type == t then return true end end
+    return false
+end
+LXR.RPC.Register('lxr-business:bill', function(src, targetId, amount, reason)
+    if limited(src) then return false, 'rate' end
+    local P, T = player(src), player(tonumber(targetId) or -1)
+    if not P or not T or T == P then return false, 'invalid' end
+    if not mayBill(P) then return false, 'not_allowed' end
+    amount = math.floor((tonumber(amount) or 0) * 100) / 100
+    if amount <= 0 or amount > (Config.Billing.max or 500) then return false, 'bad_amount' end
+    local pa, pb = GetPlayerPed(src), GetPlayerPed(T.PlayerData.source)
+    if pa == 0 or pb == 0 or #(GetEntityCoords(pa) - GetEntityCoords(pb)) > (Config.Billing.distance or 3.0) then return false, 'too_far' end
+    reason = tostring(reason or ''):gsub('[%c<>]', ''):sub(1, 80)
+    local jobName = P.PlayerData.job.name
+    local label = B.Def(jobName) and B.Def(jobName).label or jobName
+    if T.Functions.RemoveMoney('cash', amount, 'bill:' .. jobName) or T.Functions.RemoveMoney('bank', amount, 'bill:' .. jobName) then
+        if Config.Billing.toSociety and bankOn() then exports['lxr-bank']:MoveBook('society_' .. jobName, amount, P.PlayerData.citizenid, 'bill: ' .. nameOf(T))
+        else P.Functions.AddMoney('cash', amount, 'bill paid') end
+        LXRCore.Notify(T.PlayerData.source, Lang:t('info.you_paid', { amount = ('%.2f'):format(amount), job = label, reason = reason }), 'inform')
+        LXRCore.Emit('lxr:business:billed', nil, jobName, T.PlayerData.citizenid, amount, reason, true)
+        log('bill paid', { job = jobName, source = src, target = T.PlayerData.source, amount = amount })
+        return true, true
+    end
+    if Config.Billing.receiptItem and LXRShared.Items[Config.Billing.receiptItem] then
+        T.Functions.AddItem(Config.Billing.receiptItem, 1, nil, { amount = amount, job = jobName, label = label, reason = reason, from = nameOf(P), issued = os.time() }, 'bill')
+        LXRCore.Notify(T.PlayerData.source, Lang:t('info.you_owe', { amount = ('%.2f'):format(amount), job = label }), 'warning')
+        LXRCore.Emit('lxr:business:billed', nil, jobName, T.PlayerData.citizenid, amount, reason, false)
+        return true, false
+    end
+    return false, 'cannot_pay'
+end)
+-- a receipt item is paid by using it
+CreateThread(function()
+    local item = Config.Billing.receiptItem
+    if not item or not LXRShared.Items[item] then return end
+    LXRCore.Items.RegisterUsable(item, function(src, it)
+        local P = player(src)
+        local info = it and it.info or {}
+        local amount = tonumber(info.amount) or 0
+        if not P or amount <= 0 then return end
+        if not (P.Functions.RemoveMoney('cash', amount, 'receipt') or P.Functions.RemoveMoney('bank', amount, 'receipt')) then return LXRCore.Notify(src, Lang:t('error.cannot_pay'), 'error') end
+        if not P.Functions.RemoveItem(item, 1, it.slot, 'receipt paid') then P.Functions.AddMoney('cash', amount, 'receipt refund') return end
+        if Config.Billing.toSociety and bankOn() and info.job then exports['lxr-bank']:MoveBook('society_' .. info.job, amount, P.PlayerData.citizenid, 'receipt: ' .. nameOf(P)) end
+        LXRCore.Notify(src, Lang:t('info.receipt_paid', { amount = ('%.2f'):format(amount), job = info.label or info.job or '' }), 'success')
+    end)
 end)
 
 -- the book ↔ the till (society permission)
